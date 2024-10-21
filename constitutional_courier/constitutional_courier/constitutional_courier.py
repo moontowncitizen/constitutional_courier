@@ -1,7 +1,8 @@
 import gi
 import os
 gi.require_version("Gtk", "4.0")
-from gi.repository import Gtk, Gio, GtkSource, Gdk
+gi.require_version("Gdk", "4.0")
+from gi.repository import Gtk, Gio, Gdk
 
 class ConstitutionalCourier(Gtk.Application):
     def __init__(self):
@@ -36,7 +37,7 @@ class ConstitutionalCourier(Gtk.Application):
 
             # Search bar
             search_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
-            self.search_entry = Gtk.Entry()
+            self.search_entry = Gtk.SearchEntry()
             self.search_entry.set_placeholder_text("Search...")
             search_button = Gtk.Button(label="Search")
             search_button.connect("clicked", self.on_search_clicked)
@@ -49,32 +50,45 @@ class ConstitutionalCourier(Gtk.Application):
             main_box.append(self.statusbar)
 
             # Content area with sidebar and text view
-            content_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            content_box = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
             main_box.append(content_box)
 
             # Sidebar
-            sidebar = Gtk.ListBox()
-            sidebar.set_selection_mode(Gtk.SelectionMode.SINGLE)
-            sidebar.set_margin_end(10)
-            content_box.append(sidebar)
+            sidebar_scroll = Gtk.ScrolledWindow()
+            sidebar_scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+            sidebar_scroll.set_size_request(250, -1)
+            content_box.set_start_child(sidebar_scroll)
+
+            self.sidebar = Gtk.ListBox()
+            self.sidebar.set_selection_mode(Gtk.SelectionMode.SINGLE)
+            sidebar_scroll.set_child(self.sidebar)
 
             # Scrollable Text Area
-            scrolled_window = Gtk.ScrolledWindow()
-            scrolled_window.set_hexpand(True)
-            scrolled_window.set_vexpand(True)
-            content_box.append(scrolled_window)
+            text_scroll = Gtk.ScrolledWindow()
+            text_scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+            text_scroll.set_hexpand(True)
+            text_scroll.set_vexpand(True)
+            content_box.set_end_child(text_scroll)
 
             # Text View
-            self.text_view = GtkSource.View()
+            self.text_view = Gtk.TextView()
             self.text_view.set_editable(False)
             self.text_view.set_wrap_mode(Gtk.WrapMode.WORD)
-            scrolled_window.set_child(self.text_view)
+            self.text_view.set_margin_start(10)
+            self.text_view.set_margin_end(10)
+            self.text_view.set_margin_top(10)
+            self.text_view.set_margin_bottom(10)
+            self.text_view.add_css_class('main-content')
+            text_scroll.set_child(self.text_view)
 
             # Load the Constitution
             current_dir = os.path.dirname(os.path.abspath(__file__))
             file_path = os.path.join(current_dir, "constitution.txt")
-            with open(file_path, "r") as file:
-                self.constitution_text = file.read()
+            try:
+                with open(file_path, "r") as file:
+                    self.constitution_text = file.read()
+            except FileNotFoundError:
+                self.constitution_text = "Error: Constitution file not found."
 
             self.text_buffer = self.text_view.get_buffer()
             self.text_buffer.set_text(self.constitution_text)
@@ -84,15 +98,15 @@ class ConstitutionalCourier(Gtk.Application):
             constitution_row = Gtk.ListBoxRow()
             constitution_label = Gtk.Label(label="The U.S. Constitution")
             constitution_row.set_child(constitution_label)
-            sidebar.append(constitution_row)
+            self.sidebar.append(constitution_row)
 
             for title in self.articles:
                 row = Gtk.ListBoxRow()
                 label = Gtk.Label(label=title)
                 row.set_child(label)
-                sidebar.append(row)
+                self.sidebar.append(row)
 
-            sidebar.connect("row-selected", self.on_sidebar_selection)
+            self.sidebar.connect("row-selected", self.on_sidebar_selection)
 
             # Keyboard shortcut for search
             self.window.add_controller(self.create_keybinding())
@@ -105,7 +119,7 @@ class ConstitutionalCourier(Gtk.Application):
         return controller
 
     def on_key_pressed(self, controller, keyval, keycode, state):
-        if keyval == Gdk.KEY_f and (state & Gdk.ModifierType.CONTROL_MASK):
+        if keyval == Gdk.KEY_f and state & Gdk.ModifierType.CONTROL_MASK:
             self.search_entry.grab_focus()
             return True
         return False
@@ -174,4 +188,4 @@ class ConstitutionalCourier(Gtk.Application):
 
 if __name__ == "__main__":
     app = ConstitutionalCourier()
-    app.run()
+    app.run(None)
