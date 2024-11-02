@@ -85,10 +85,11 @@ Contributions are welcome! Here's how you can help:
 ## To-Do List
 
 1. Bug Fixes
-2. Packaging
-3. Ports (MacOS and Windows and maybe just maybe an android port)
-4. Sound Effects?
-5. Maybe a fork of this for each state's constitution
+2. Fonts probably Go Mono nerd fonts.
+3. Packaging
+4. Ports (MacOS and Windows and maybe just maybe an android port)
+5. Sound Effects? (revolutionary war sounds ding of liberty bell, tin whistle, yankee doodle etc.){an option only}
+6. Maybe a fork of this for each state's constitution all offline.
 
 ## License
 
