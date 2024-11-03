@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Constitutional Courier
+Comment=United States Constitution Reader
+Exec=python3 /usr/share/constitutional-courier/constitutional_courier.py
+Icon=constitutional-courier
+Type=Application
+Categories=Education;Office;
+Terminal=false
