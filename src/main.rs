@@ -1,5 +1,6 @@
 use iced::widget::{button, column, container, row, text, text_input, scrollable};
-use iced::{theme, Element, Length, Sandbox, Settings};
+use iced::{theme, Color, Element, Length, Sandbox, Settings};
+use iced::advanced::graphics::gradient::Linear;
 
 fn main() -> iced::Result {
     ConstitutionViewer::run(Settings::default())
@@ -311,19 +312,122 @@ container(
 }
 }
 
+
+
 impl ConstitutionViewer {
-fn update_filtered_sections(&mut self) {
-// Filter sections based on search query
-self.filtered_sections = self
-    .sections
-    .iter()
-    .enumerate()
-    .filter(|(_, section)| {
-        let search_lower = self.search_query.to_lowercase();
-        section.title.to_lowercase().contains(&search_lower)
-            || section.content.to_lowercase().contains(&search_lower)
-    })
-    .map(|(index, _)| index)
-    .collect();
-}
+    fn update_filtered_sections(&mut self) {
+        // Filter sections based on search query
+        self.filtered_sections = self
+            .sections
+            .iter()
+            .enumerate()
+            .filter(|(_, section)| {
+                let search_lower = self.search_query.to_lowercase();
+                section.title.to_lowercase().contains(&search_lower)
+                    || section.content.to_lowercase().contains(&search_lower)
+            })
+            .map(|(index, _)| index)
+            .collect();
+    }
+
+    fn custom_button_style(&self, is_selected: bool) -> theme::Button {
+        let gradient = if is_selected {
+            // Gradient from #cb231d to #448388
+            theme::Button::Custom(Box::new(move |_theme| {
+                iced::widget::button::Style::default()
+                    .with_background(iced::Background::Gradient(Linear::new()
+                        .start(Color::from_rgb8(0xCB, 0x23, 0x1D))
+                        .end(Color::from_rgb8(0x44, 0x83, 0x88))))
+                    .with_text_color(Color::from_rgb8(0xEB, 0xDA, 0xB1))
+                    .with_border_radius(10.0)
+            }))
+        } else {
+            // Gradient from #820006 to #04515e
+            theme::Button::Custom(Box::new(move |_theme| {
+                iced::widget::button::Style::default()
+                    .with_background(iced::Background::Gradient(Linear::new()
+                        .start(Color::from_rgb8(0x82, 0x00, 0x06))
+                        .end(Color::from_rgb8(0x04, 0x51, 0x5E))))
+                    .with_text_color(Color::from_rgb8(0xEB, 0xDA, 0xB1))
+                    .with_border_radius(10.0)
+            }))
+        };
+        gradient
+    }
+
+    fn view(&self) -> Element<Message> {
+        // Custom container style for main background
+        let container_style = container::Style::default()
+            .with_background(iced::Background::Color(Color::from_rgb8(0x28, 0x28, 0x28)))
+            .with_text_color(Color::from_rgb8(0xFA, 0xF0, 0xC7));
+
+        // Search bar
+        let search_bar = text_input("Search Constitution...", &self.search_query)
+            .on_input(Message::SearchQueryChanged)
+            .padding(10)
+            .width(Length::Fill)
+            .style(theme::TextInput::Custom(Box::new(|_theme| {
+                iced::widget::text_input::Style::default()
+                    .with_background(iced::Background::Color(Color::from_rgb8(0x04, 0x51, 0x5E)))
+                    .with_border_radius(10.0)
+            })));
+
+        // Sections list
+        let sections_list: Vec<Element<Message>> = self.filtered_sections.iter()
+            .map(|&index| {
+                let section = &self.sections[index];
+                button(text(&section.title).size(16))
+                    .width(Length::Fill)
+                    .padding(10)
+                    .style(self.custom_button_style(Some(index) == self.selected_section))
+                    .on_press(Message::SelectSection(index))
+                    .into()
+            })
+            .collect();
+
+        // Sections column with scrolling
+        let sections_column = scrollable(
+            column(sections_list)
+                .spacing(5)
+                .width(Length::Fixed(250.0))
+        );
+
+        // Content display
+        let content_view = if let Some(index) = self.selected_section {
+            let section = &self.sections[index];
+            scrollable(
+                container(
+                    column![
+                        text(&section.title).size(24),
+                        text(&section.content).size(16)
+                    ]
+                    .spacing(10)
+                )
+                .padding(20)
+                .width(Length::Fill)
+            )
+        } else {
+            scrollable(
+                container(
+                    text("Select a section to view its content")
+                        .size(16)
+                )
+                .padding(20)
+            )
+        };
+
+        // Main layout
+        container(
+            column![
+                search_bar,
+                row![
+                    sections_column,
+                    content_view
+                ]
+            ]
+        )
+        .style(container_style)
+        .padding(20)
+        .into()
+    }
 }
