@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 iced = { version = "0.10", features = ["advanced"] }
+open = "5.3.1"
