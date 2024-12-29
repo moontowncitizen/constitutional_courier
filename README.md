@@ -1,6 +1,6 @@
 # Constitutional Courier
 
-Constitutional Courier is a modern, GTK-based desktop application that provides an elegant and intuitive way to explore the United States Constitution. Built with Python and GTK 4.0, it offers a clean dark-themed interface that makes reading and searching through constitutional texts comfortable and efficient. I am a beginner and I hope you folks enjoy using this.
+Constitutional Courier is a modern, desktop application that provides an elegant and intuitive way to explore the United States Constitution. Built with Rust and Iced, it offers a clean dark-themed interface that makes reading and searching through constitutional texts comfortable and efficient. I am a beginner and I hope you folks enjoy using this.
 
 ![Constitutional Courier Screenshot](app.png)
 (credit for the icon it is published under the Creative Commons License)
@@ -85,22 +85,20 @@ Contributions are welcome! Here's how you can help:
 ## To-Do List
 
 1. Bug Fixes
-2. Fonts probably Go Mono nerd fonts.
-3. Packaging
-4. Ports (MacOS and Windows and maybe just maybe an android port)
-5. Sound Effects? (revolutionary war sounds ding of liberty bell, tin whistle, yankee doodle etc.){an option only}
-6. Maybe a fork of this for each state's constitution all offline.
+2. Sound effects
+3. Animations
 
 ## License
 
-This project is licensed under the GPL v2.0 License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GPL v3.0 License - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
-- Built using GTK 4.0 and libadwaita
+- iced library for rust
 - Inspired by the need for accessible constitutional texts
-- Thanks to the GTK team for their excellent documentation
-- Thanks to python3 for being amazing for beginners
+- Thanks to JesseKPhillips for their constitution texts on github https://github.com/JesseKPhillips/USA-Constitution
+- Thanks to m-casanova for the font https://github.com/JesseKPhillips/USA-Constitution
+- Thanks 
 
 ## Contact
 
