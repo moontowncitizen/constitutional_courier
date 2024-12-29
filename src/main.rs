@@ -85,7 +85,7 @@ impl Sandbox for ConstitutionViewer {
             ConstitutionSection {
         title: "Amendment II.".to_string(),
         content: vec![
-            "A well regulated militia, being necessary to the security of a free state, the right of the people to keep and bear arms, shall not be infringed."].join("\n\n")],
+            "A well regulated militia, being necessary to the security of a free state, the right of the people to keep and bear arms, shall not be infringed."].join("\n\n")
         },
             ConstitutionSection {
         title: "Amendment III.".to_string(),
