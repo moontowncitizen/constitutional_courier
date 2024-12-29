@@ -1,7 +1,5 @@
-use iced::widget::{button, column, container, row, scrollable, text, text_editor, text_input};
-use iced::{alignment, Color, Element, Length, Sandbox, Settings};
-use iced::widget::text_editor::{Action, Content, TextEditor};
-use iced::advanced::text::Text;
+use iced::widget::{button, column, container, row, text, text_input};
+use iced::{theme, Color, Element, Length, Sandbox, Settings};
 
 fn main() -> iced::Result {
     ConstitutionalViewer::run(Settings::default())
@@ -18,22 +16,19 @@ struct ConstitutionalViewer {
     search_query: String,
     filtered_sections: Vec<usize>,
     selected_section: Option<usize>,
-    content: Content,
-    highlighted_ranges: Vec<(usize, usize)>,  // Start and end positions of highlights
+    content: String,
 }
 
 #[derive(Debug, Clone)]
 enum Message {
     SearchQueryChanged(String),
     SelectSection(usize),
-    Edit(Action),
 }
 
 impl Sandbox for ConstitutionalViewer {
     type Message = Message;
 
     fn new() -> Self {
-        // Example sections - you can replace these with actual content
         let sections = vec![
             Section {
                 title: "Article I".to_string(),
@@ -54,8 +49,7 @@ impl Sandbox for ConstitutionalViewer {
             search_query: String::new(),
             filtered_sections: Vec::new(),
             selected_section: None,
-            content: Content::new(),
-            highlighted_ranges: Vec::new(),
+            content: String::new(),
         };
 
         viewer.update_filtered_sections();
@@ -71,30 +65,18 @@ impl Sandbox for ConstitutionalViewer {
             Message::SearchQueryChanged(query) => {
                 self.search_query = query;
                 self.update_filtered_sections();
-                self.update_highlights();
             }
             Message::SelectSection(index) => {
                 self.selected_section = Some(index);
-                self.content = Content::with_text(&self.sections[index].content);
-                self.update_highlights();
-            }
-            Message::Edit(action) => {
-                self.content.edit(action);
-                if let Some(index) = self.selected_section {
-                    self.sections[index].content = self.content.text();
-                    self.update_highlights();
-                }
+                self.content = self.sections[index].content.clone();
             }
         }
     }
 
     fn view(&self) -> Element<Message> {
-        let search_bar = text_input(
-            "Search articles and amendments...",
-            &self.search_query,
-            Message::SearchQueryChanged,
-        )
-        .padding(10);
+        let search_bar = text_input("Search articles and amendments...", &self.search_query)
+            .on_input(Message::SearchQueryChanged)
+            .padding(10);
 
         let sections_list = self.filtered_sections.iter().map(|&index| {
             let section = &self.sections[index];
@@ -102,44 +84,44 @@ impl Sandbox for ConstitutionalViewer {
                 .width(Length::Fill)
                 .padding(10)
                 .style(if Some(index) == self.selected_section {
-                    iced::theme::Button::Primary
+                    theme::Button::Primary
                 } else {
-                    iced::theme::Button::Secondary
+                    theme::Button::Secondary
                 })
                 .on_press(Message::SelectSection(index))
-                .into()
         });
 
         let sections_column = column(sections_list.collect())
             .spacing(5)
             .width(Length::Fixed(200.0));
 
-        // Create a custom styled text editor
-        let editor = TextEditor::new(&self.content)
-            .on_edit(Message::Edit)
-            .highlight_ranges(self.highlighted_ranges.iter().map(|&(start, end)| {
-                (start..end, iced::Background::Color(Color::from_rgb(1.0, 1.0, 0.0)))
-            }))
-            .width(Length::Fill)
-            .height(Length::Fill);
+        let content_area = if let Some(index) = self.selected_section {
+            let content = &self.sections[index].content;
+            let highlighted_content = if !self.search_query.is_empty() {
+                self.highlight_text(content)
+            } else {
+                text(content).size(16).into()
+            };
 
-        let content_area = if self.selected_section.is_some() {
-            editor.into()
-        } else {
-            text("Select a section to view its content")
+            container(highlighted_content)
                 .width(Length::Fill)
                 .height(Length::Fill)
-                .horizontal_alignment(alignment::Horizontal::Center)
-                .vertical_alignment(alignment::Vertical::Center)
+                .padding(20)
                 .into()
+        } else {
+            container(
+                text("Select a section to view its content")
+                    .width(Length::Fill)
+                    .height(Length::Fill)
+                    .horizontal_alignment(iced::alignment::Horizontal::Center)
+                    .vertical_alignment(iced::alignment::Vertical::Center),
+            )
+            .into()
         };
 
         let main_content = row![
             sections_column,
-            container(content_area)
-                .width(Length::Fill)
-                .height(Length::Fill)
-                .padding(20),
+            content_area,
         ]
         .spacing(20);
 
@@ -173,24 +155,60 @@ impl ConstitutionalViewer {
             .collect();
     }
 
-    fn update_highlights(&mut self) {
-        self.highlighted_ranges.clear();
+    fn highlight_text(&self, content: &str) -> Element<Message> {
+        let search_term = self.search_query.to_lowercase();
+        let content_lower = content.to_lowercase();
 
-        if self.search_query.is_empty() {
-            return;
+        let mut elements = Vec::new();
+        let mut last_idx = 0;
+
+        while let Some(found_idx) = content_lower[last_idx..].find(&search_term) {
+            let absolute_idx = last_idx + found_idx;
+
+            // Add non-matching text before the match
+            if absolute_idx > last_idx {
+                elements.push(
+                    text(&content[last_idx..absolute_idx])
+                        .size(16)
+                        .into()
+                );
+            }
+
+            // Add highlighted matching text
+            elements.push(
+                container(
+                    text(&content[absolute_idx..absolute_idx + search_term.len()])
+                        .size(16)
+                )
+                .style(theme::Container::Custom(Box::new(HighlightStyle)))
+                .into()
+            );
+
+            last_idx = absolute_idx + search_term.len();
         }
 
-        let content = self.content.text().to_lowercase();
-        let search_term = self.search_query.to_lowercase();
+        // Add remaining text
+        if last_idx < content.len() {
+            elements.push(
+                text(&content[last_idx..])
+                    .size(16)
+                    .into()
+            );
+        }
 
-        let mut start_idx = 0;
-        while let Some(found_idx) = content[start_idx..].find(&search_term) {
-            let absolute_idx = start_idx + found_idx;
-            self.highlighted_ranges.push((
-                absolute_idx,
-                absolute_idx + search_term.len()
-            ));
-            start_idx = absolute_idx + search_term.len();
+        row(elements).spacing(0).into()
+    }
+}
+
+struct HighlightStyle;
+
+impl container::StyleSheet for HighlightStyle {
+    type Style = theme::Theme;
+
+    fn appearance(&self, _style: &Self::Style) -> container::Appearance {
+        container::Appearance {
+            background: Some(iced::Background::Color(Color::from_rgb(1.0, 1.0, 0.0))),
+            ..Default::default()
         }
     }
 }
