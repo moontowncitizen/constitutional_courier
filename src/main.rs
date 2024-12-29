@@ -1,5 +1,8 @@
-use iced::widget::{button, column, container, row, text, text_input, scrollable};
-use iced::{theme, Element, Length, Sandbox, Settings};
+use iced::widget::{button, column, container, row, text, text_input, scrollable, tooltip};
+use iced::{theme, Element, Length, Sandbox, Settings, Command};
+use iced::widget::button::Style;
+use iced::widget::menu;
+use iced::widget::menu::{MenuBar, Menu};
 
 fn main() -> iced::Result {
     ConstitutionViewer::run(Settings::default())
@@ -242,6 +245,16 @@ match message {
 }
 
 fn view(&self) -> Element<Message> {
+// GitHub menu button
+let github_menu = menu::bar(vec![
+    menu::item("Menu",
+        menu::Menu::new(vec![
+            menu::Item::new(text("About")).on_press(Message::OpenGitHubRepo),
+            menu::Item::new(text("Lorem Ipsum")).on_press(Message::DoNothing)
+        ])
+    )
+]);
+
 // Search bar
 let search_bar = text_input("Search Constitution...", &self.search_query)
     .on_input(Message::SearchQueryChanged)
@@ -296,9 +309,15 @@ let content_view = if let Some(index) = self.selected_section {
     )
 };
 
-// Main layout
+// Main layout with menu bar
 container(
     column![
+        row![
+            text("US Constitution Viewer").size(24),
+            container(github_menu)
+                .align_x(iced::alignment::Horizontal::Right)
+                .width(Length::Fill)
+        ],
         search_bar,
         row![
             sections_column,
@@ -311,19 +330,31 @@ container(
 }
 }
 
-impl ConstitutionViewer {
-fn update_filtered_sections(&mut self) {
-// Filter sections based on search query
-self.filtered_sections = self
-    .sections
-    .iter()
-    .enumerate()
-    .filter(|(_, section)| {
-        let search_lower = self.search_query.to_lowercase();
-        section.title.to_lowercase().contains(&search_lower)
-            || section.content.to_lowercase().contains(&search_lower)
-    })
-    .map(|(index, _)| index)
-    .collect();
+// Update enum to include new messages
+#[derive(Debug, Clone)]
+enum Message {
+SearchQueryChanged(String),
+SelectSection(usize),
+OpenGitHubRepo,
+DoNothing,
+}
+
+impl Sandbox for ConstitutionViewer {
+// Add method to handle new messages
+fn update(&mut self, message: Message) {
+match message {
+    Message::SearchQueryChanged(query) => {
+        self.search_query = query;
+        self.update_filtered_sections();
+    }
+    Message::SelectSection(index) => {
+        self.selected_section = Some(index);
+    }
+    Message::OpenGitHubRepo => {
+        // Open GitHub repository in default browser
+        open::that("https://github.com/moontowncitizen/constitutional_courier").unwrap_or_default();
+    }
+    Message::DoNothing => {} // Placeholder for menu item
+}
 }
 }
