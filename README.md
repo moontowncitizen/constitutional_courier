@@ -29,23 +29,22 @@ https://www.svgrepo.com/svg/404467/constitution-constitution-book-court-gavel-la
 
 ## Prerequisites
 
-- Python 3.x
-- GTK 4.0
-- PyGObject
-- libadwaita
+- cargo
+- iced
+- 
 
 ## Installation
 
 1. Install system dependencies:
 ```bash
 # Ubuntu/Debian
-sudo apt install python3-gi python3-gi-cairo gir1.2-gtk-4.0 libadwaita-1-0
+sudo apt install rustup
 
 # Fedora
-sudo dnf install python3-gobject gtk4 libadwaita
+sudo dnf install rustup
 
 # Arch
-sudo pacman -Syu python3-gobject gtk4 libadwaita
+sudo pacman -Syu rustup
 ```
 
 2. Clone the repository:
@@ -56,7 +55,7 @@ cd constitutional-courier
 
 3. Run the application:
 ```bash
-python3 constitutional_courier.py
+cargo run
 ```
 
 ## Usage
@@ -85,8 +84,9 @@ Contributions are welcome! Here's how you can help:
 ## To-Do List
 
 1. Bug Fixes
-2. Sound effects
-3. Animations
+2. Getting a clean user interface
+3. Sound effects
+4. Animations
 
 ## License
 
@@ -97,8 +97,6 @@ This project is licensed under the GPL v3.0 License - see the [LICENSE](LICENSE)
 - iced library for rust
 - Inspired by the need for accessible constitutional texts
 - Thanks to JesseKPhillips for their constitution texts on github https://github.com/JesseKPhillips/USA-Constitution
-- Thanks to m-casanova for the font https://github.com/JesseKPhillips/USA-Constitution
-- Thanks 
 
 ## Contact
 
